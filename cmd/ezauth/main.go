@@ -5,14 +5,18 @@ import (
 	"net/http"
 
 	"ezauth/internal/api"
+	"ezauth/internal/middleware"
 )
 
 func main() {
 	router := api.NewRouter()
 
+	//Middleware
+	handler := middleware.Logging(router)
+
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: router,
+		Handler: handler,
 	}
 
 	log.Println(`
