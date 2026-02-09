@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
+	"ezauth/internal/auth"
 	"ezauth/internal/httpx"
 )
 
@@ -11,21 +13,25 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func LoginHandler() http.Handler {
+func LoginHandler(service *auth.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req LoginRequest
 
-		if err := httpx.DecodeJSON(r, &req); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			httpx.Error(w, http.StatusBadRequest, "invalid JSON body")
 			return
 		}
 
-		if !httpx.Required(req.Email) || !httpx.Required(req.Password) {
-			httpx.Error(w, http.StatusBadRequest, "email and password are required")
+		err := service.Login(auth.LoginInput{
+			Email:    req.Email,
+			Password: req.Password,
+		})
+
+		if err != nil {
+			httpx.Error(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		// Placeholder logic
 		httpx.JSON(w, http.StatusOK, map[string]string{
 			"message": "login input valid",
 		})

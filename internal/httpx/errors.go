@@ -1,18 +1,17 @@
 package httpx
 
 import (
-	"encoding/json"
 	"net/http"
 )
 
-func Error(w http.ResponseWriter, status int, message string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+type ErrorResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
 
-	resp := Response{
+func Error(w http.ResponseWriter, status int, message string) {
+	JSON(w, status, ErrorResponse{
 		Success: false,
 		Error:   message,
-	}
-
-	_ = json.NewEncoder(w).Encode(resp)
+	})
 }

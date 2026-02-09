@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"ezauth/internal/api/handlers"
+	"ezauth/internal/auth"
 	"ezauth/internal/httpx"
 )
 
@@ -15,7 +16,8 @@ func NewRouter() http.Handler {
 
 	mux.Handle("/health", healthHandler)
 
-	loginHandler := handlers.LoginHandler()
+	authService := auth.NewService()
+	loginHandler := handlers.LoginHandler(authService)
 	loginHandler = httpx.AllowMethod(http.MethodPost, loginHandler)
 
 	mux.Handle("/auth/login", loginHandler)
