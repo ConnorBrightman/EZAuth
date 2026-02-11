@@ -10,8 +10,9 @@ import (
 
 // Service contains business logic for authentication
 type Service struct {
-	repo      UserRepository
-	secretKey []byte
+	repo        UserRepository
+	jwtSecret   []byte
+	tokenExpiry time.Duration
 }
 
 // LoginInput represents login request data
@@ -21,10 +22,11 @@ type LoginInput struct {
 }
 
 // NewService creates a new Service instance with a secret key for JWT
-func NewService(repo UserRepository, secretKey []byte) *Service {
+func NewService(repo UserRepository, jwtSecret []byte, tokenExpiry time.Duration) *Service {
 	return &Service{
-		repo:      repo,
-		secretKey: secretKey,
+		repo:        repo,
+		jwtSecret:   jwtSecret,
+		tokenExpiry: tokenExpiry,
 	}
 }
 
@@ -75,5 +77,5 @@ func (s *Service) GenerateToken(user User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(s.secretKey)
+	return token.SignedString(s.jwtSecret)
 }

@@ -7,44 +7,44 @@ import (
 
 	"ezauth/internal/api"
 	"ezauth/internal/auth"
+	"ezauth/internal/config"
 	"ezauth/internal/middleware"
 )
 
 func main() {
+	cfg := config.LoadConfig()
+
 	// Ensure data directory exists
-	if _, err := os.Stat("./data"); os.IsNotExist(err) {
-		os.Mkdir("./data", 0755)
+	if cfg.StorageType == "file" {
+		if _, err := os.Stat("./data"); os.IsNotExist(err) {
+			os.Mkdir("./data", 0755)
+		}
 	}
 
-	// Choose repository: Memory or File
-	// repo := auth.NewMemoryUserRepository()
-	repo, err := auth.NewFileUserRepository("./data/users.json")
-	if err != nil {
-		log.Fatal(err)
+	// Choose repository
+	var repo auth.UserRepository
+	var err error
+	if cfg.StorageType == "file" {
+		repo, err = auth.NewFileUserRepository(cfg.UserFilePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		repo = auth.NewMemoryUserRepository()
 	}
 
-	// Create auth service
-	secretKey := []byte("super-secret-key") // In production, load from env
-	service := auth.NewService(repo, secretKey)
-	// Create router with service
-	router := api.NewRouter(service, secretKey)
+	service := auth.NewService(repo, cfg.JWTSecret, cfg.TokenExpiry)
 
-	// Wrap router with logging middleware
+	// Router
+	router := api.NewRouter(service, cfg.JWTSecret)
+
 	handler := middleware.Logging(router)
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + cfg.Port,
 		Handler: handler,
 	}
 
-	log.Println(`
-                                  
- _____ _____    _____     _   _   
-|   __|__   |  |  _  |_ _| |_| |_ 
-|   __|   __|  |     | | |  _|   |
-|_____|_____|  |__|__|___|_| |_|_|
-                                                                 
-	`)
-	log.Println("EZauth server running on http://localhost:8080")
+	log.Println("EZauth server running on http://localhost:" + cfg.Port)
 	log.Fatal(server.ListenAndServe())
 }
