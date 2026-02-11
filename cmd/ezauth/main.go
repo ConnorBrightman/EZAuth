@@ -3,15 +3,33 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"ezauth/internal/api"
+	"ezauth/internal/auth"
 	"ezauth/internal/middleware"
 )
 
 func main() {
-	router := api.NewRouter()
+	// Ensure data directory exists
+	if _, err := os.Stat("./data"); os.IsNotExist(err) {
+		os.Mkdir("./data", 0755)
+	}
 
-	//Middleware
+	// Choose repository: Memory or File
+	// repo := auth.NewMemoryUserRepository()
+	repo, err := auth.NewFileUserRepository("./data/users.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create auth service
+	service := auth.NewService(repo)
+
+	// Create router with service
+	router := api.NewRouter(service)
+
+	// Wrap router with logging middleware
 	handler := middleware.Logging(router)
 
 	server := &http.Server{

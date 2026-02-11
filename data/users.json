@@ -1,0 +1,12 @@
+{
+  "test1@test.co.uk": {
+    "ID": "1f44d178-3023-4c5d-be76-8dbe80478270",
+    "Email": "test1@test.co.uk",
+    "Password": "$2a$10$CnE9cLr.R/5nIINmB.98OuzZ.pC3mWyboMAC4r28EY4K9.Qmb5nnu"
+  },
+  "test1@test1.co.uk": {
+    "ID": "0ad5780e-7830-40d3-aac7-4a3ba2e48269",
+    "Email": "test1@test1.co.uk",
+    "Password": "$2a$10$Z9cMrMm8eiK9eGl3HkslweD.GeVQ7FKvDsdGnLxJ8gtMFqgFI0Jni"
+  }
+}
