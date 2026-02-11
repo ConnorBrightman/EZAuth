@@ -1,5 +1,9 @@
+@baseUrl = http://localhost:8080
 
-POST http://localhost:8080/auth/login
+###
+
+# Register User
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
@@ -8,7 +12,9 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:8080/auth/register
+
+# Login
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
@@ -16,3 +22,8 @@ Content-Type: application/json
     "password": "secret123"
 }
 
+###
+
+# Protected Route - Get Current User
+GET {{baseUrl}}/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3QxQHRlc3QuY28udWsiLCJleHAiOjE3NzA5MjI1NjcsInVzZXJfaWQiOiIxZjQ0ZDE3OC0zMDIzLTRjNWQtYmU3Ni04ZGJlODA0NzgyNzAifQ.RHmuylvATAy6cKf5IvMNGw4YsTjnH9QnNiZWLqcq31g

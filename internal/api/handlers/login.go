@@ -22,18 +22,25 @@ func LoginHandler(service *auth.Service) http.Handler {
 			return
 		}
 
-		err := service.Login(auth.LoginInput{
+		user, err := service.Login(auth.LoginInput{
 			Email:    req.Email,
 			Password: req.Password,
 		})
-
 		if err != nil {
 			httpx.Error(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
+		// Generate JWT
+		token, err := service.GenerateToken(user)
+		if err != nil {
+			httpx.Error(w, http.StatusInternalServerError, "failed to generate token")
+			return
+		}
+
+		// Respond with token
 		httpx.JSON(w, http.StatusOK, map[string]string{
-			"message": "login input valid",
+			"token": token,
 		})
 	})
 }

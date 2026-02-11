@@ -24,10 +24,10 @@ func main() {
 	}
 
 	// Create auth service
-	service := auth.NewService(repo)
-
+	secretKey := []byte("super-secret-key") // In production, load from env
+	service := auth.NewService(repo, secretKey)
 	// Create router with service
-	router := api.NewRouter(service)
+	router := api.NewRouter(service, secretKey)
 
 	// Wrap router with logging middleware
 	handler := middleware.Logging(router)
