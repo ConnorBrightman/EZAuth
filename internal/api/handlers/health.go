@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"ezauth/internal/httpx"
+	"github.com/ConnorBrightman/EZauth/internal/httpx"
 )
 
 type HealthResponse struct {

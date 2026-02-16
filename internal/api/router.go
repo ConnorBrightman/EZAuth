@@ -3,10 +3,10 @@ package api
 import (
 	"net/http"
 
-	"ezauth/internal/api/handlers"
-	"ezauth/internal/auth"
-	"ezauth/internal/httpx"
-	"ezauth/internal/middleware"
+	"github.com/ConnorBrightman/EZauth/internal/api/handlers"
+	"github.com/ConnorBrightman/EZauth/internal/auth"
+	"github.com/ConnorBrightman/EZauth/internal/httpx"
+	"github.com/ConnorBrightman/EZauth/internal/middleware"
 )
 
 func NewRouter(service *auth.Service, secret []byte) http.Handler {

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"ezauth/internal/api"
-	"ezauth/internal/auth"
-	"ezauth/internal/config"
-	"ezauth/internal/middleware"
+	"github.com/ConnorBrightman/EZauth/internal/api"
+	"github.com/ConnorBrightman/EZauth/internal/auth"
+	"github.com/ConnorBrightman/EZauth/internal/config"
+	"github.com/ConnorBrightman/EZauth/internal/middleware"
 )
 
 func main() {
