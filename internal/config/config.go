@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	Port        string
+	Host        string
 	JWTSecret   string
 	TokenExpiry time.Duration
 	Storage     string
@@ -23,6 +24,7 @@ func LoadConfig() *Config {
 
 	// Default values
 	viper.SetDefault("PORT", "8080")
+	viper.SetDefault("Host", "127.0.0.1")
 	viper.SetDefault("JWT_SECRET", "super-secret-key")
 	viper.SetDefault("TOKEN_EXPIRY", 24*time.Hour)
 	viper.SetDefault("STORAGE", "memory")
@@ -34,6 +36,7 @@ func LoadConfig() *Config {
 
 	return &Config{
 		Port:        viper.GetString("PORT"),
+		Host:        viper.GetString("HOST"),
 		JWTSecret:   viper.GetString("JWT_SECRET"),
 		TokenExpiry: viper.GetDuration("TOKEN_EXPIRY"),
 		Storage:     viper.GetString("STORAGE"),

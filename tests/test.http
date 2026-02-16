@@ -1,4 +1,6 @@
 @baseUrl = http://localhost:8080
+@accessToken = <PASTE_ACCESS_TOKEN_HERE>
+@refreshToken = <PASTE_REFRESH_TOKEN_HERE>
 
 ###
 
@@ -13,7 +15,7 @@ Content-Type: application/json
 
 ###
 
-# Login
+# Login User
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
@@ -22,8 +24,19 @@ Content-Type: application/json
     "password": "secret123"
 }
 
+### 
+
+# Protected Route
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
 ###
 
-# Protected Route - Get Current User
-GET {{baseUrl}}/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3QxQHRlc3QuY28udWsiLCJleHAiOjE3NzA5MjI1NjcsInVzZXJfaWQiOiIxZjQ0ZDE3OC0zMDIzLTRjNWQtYmU3Ni04ZGJlODA0NzgyNzAifQ.RHmuylvATAy6cKf5IvMNGw4YsTjnH9QnNiZWLqcq31g
+# Refresh Access Token
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+    "email": "test1@test.co.uk",
+    "refresh_token": "{{refreshToken}}"
+}

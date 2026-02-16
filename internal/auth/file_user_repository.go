@@ -7,38 +7,44 @@ import (
 )
 
 type FileUserRepository struct {
-	mu       sync.RWMutex
-	users    map[string]User
+	mu       sync.Mutex
 	filePath string
 }
 
 // NewFileUserRepository creates a new file-backed user repository
 func NewFileUserRepository(filePath string) (*FileUserRepository, error) {
-	repo := &FileUserRepository{
-		users:    make(map[string]User),
-		filePath: filePath,
-	}
-
-	// Load existing users from file, if it exists
-	if _, err := os.Stat(filePath); err == nil {
-		data, err := os.ReadFile(filePath)
-		if err != nil {
+	// Ensure file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		if err := os.WriteFile(filePath, []byte("{}"), 0644); err != nil {
 			return nil, err
 		}
+	}
 
-		if len(data) > 0 {
-			if err := json.Unmarshal(data, &repo.users); err != nil {
-				return nil, err
-			}
+	return &FileUserRepository{
+		filePath: filePath,
+	}, nil
+}
+
+// readAll loads all users from the file
+func (r *FileUserRepository) readAll() (map[string]User, error) {
+	data, err := os.ReadFile(r.filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	users := make(map[string]User)
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &users); err != nil {
+			return nil, err
 		}
 	}
 
-	return repo, nil
+	return users, nil
 }
 
-// save writes the current users map to the file
-func (r *FileUserRepository) save() error {
-	data, err := json.MarshalIndent(r.users, "", "  ")
+// writeAll writes all users to the file
+func (r *FileUserRepository) writeAll(users map[string]User) error {
+	data, err := json.MarshalIndent(users, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -51,23 +57,69 @@ func (r *FileUserRepository) Create(user User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, exists := r.users[user.Email]; exists {
+	users, err := r.readAll()
+	if err != nil {
+		return err
+	}
+
+	if _, exists := users[user.Email]; exists {
 		return ErrUserExists
 	}
 
-	r.users[user.Email] = user
-	return r.save()
+	users[user.Email] = user
+	return r.writeAll(users)
 }
 
 // FindByEmail retrieves a user by email
 func (r *FileUserRepository) FindByEmail(email string) (User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	user, exists := r.users[email]
+	users, err := r.readAll()
+	if err != nil {
+		return User{}, err
+	}
+
+	user, exists := users[email]
 	if !exists {
 		return User{}, ErrUserNotFound
 	}
 
 	return user, nil
+}
+
+// Update modifies an existing user
+func (r *FileUserRepository) Update(user User) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	users, err := r.readAll()
+	if err != nil {
+		return err
+	}
+
+	if _, exists := users[user.Email]; !exists {
+		return ErrUserNotFound
+	}
+
+	users[user.Email] = user
+	return r.writeAll(users)
+}
+
+// Delete removes a user
+func (r *FileUserRepository) Delete(email string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	users, err := r.readAll()
+	if err != nil {
+		return err
+	}
+
+	if _, exists := users[email]; !exists {
+		return ErrUserNotFound
+	}
+
+	delete(users, email)
+	return r.writeAll(users)
 }

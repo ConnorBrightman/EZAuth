@@ -33,5 +33,10 @@ func NewRouter(service *auth.Service, secret []byte) http.Handler {
 	meHandler = httpx.AllowMethod(http.MethodGet, meHandler)
 	mux.Handle("/auth/me", meHandler)
 
+	// Refresh token
+	refreshHandler := handlers.RefreshHandler(service)
+	refreshHandler = httpx.AllowMethod(http.MethodPost, refreshHandler)
+	mux.Handle("/auth/refresh", refreshHandler)
+
 	return mux
 }

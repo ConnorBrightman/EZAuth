@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +15,6 @@ import (
 func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
-
 	// Ensure data directory exists if using file storage
 	if cfg.Storage == "file" {
 		if _, err := os.Stat("./data"); os.IsNotExist(err) {
@@ -43,20 +43,27 @@ func main() {
 	// Create router with JWT secret
 	router := api.NewRouter(service, []byte(cfg.JWTSecret))
 
+	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	// Wrap router with logging middleware
 	handler := middleware.Logging(router)
-
 	server := &http.Server{
-		Addr:    ":" + cfg.Port,
+		Addr:    addr,
 		Handler: handler,
 	}
 
 	log.Println(`
- _____ _____    _____     _   _
-|   __|__   |  |  _  |_ _| |_| |_
-|   __|   __|  |     | | |  _|   |
-|_____|_____|  |__|__|___|_| |_|_|
+
+                                                   
+                             
+ _____ _____         _   _   
+|   __|__   |___ _ _| |_| |_ 
+|   __|   __| .'| | |  _|   |
+|_____|_____|__,|___|_| |_|_|
+                             
+                                                   
+                                   
+                                                                 
 `)
-	log.Println("EZauth server running on http://localhost:" + cfg.Port)
+	log.Printf("Starting EZauth with storage=%s, port=%s, tokenExpiry=%s\n", cfg.Storage, cfg.Port, cfg.TokenExpiry)
 	log.Fatal(server.ListenAndServe())
 }

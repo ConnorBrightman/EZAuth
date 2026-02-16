@@ -36,3 +36,15 @@ func (r *MemoryUserRepository) FindByEmail(email string) (User, error) {
 
 	return user, nil
 }
+
+func (r *MemoryUserRepository) Update(user User) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.users[user.Email]; !exists {
+		return ErrUserNotFound
+	}
+
+	r.users[user.Email] = user
+	return nil
+}
