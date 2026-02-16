@@ -1,3 +1,5 @@
+github.com/ConnorBrightman/ezauth v0.0.0-20260216184538-fb7c905137b5 h1:x8vwPP1H/nJCNH0x/o21D+NQknOwtym+F3zYpDOveUM=
+github.com/ConnorBrightman/ezauth v0.0.0-20260216184538-fb7c905137b5/go.mod h1:nduaYgC3MU8aYEHvruoaJrl0/5z7+ZNRpgyajphQ24A=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=

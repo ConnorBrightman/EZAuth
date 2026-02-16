@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ConnorBrightman/EZauth/internal/auth"
-	"github.com/ConnorBrightman/EZauth/internal/httpx"
+	"github.com/ConnorBrightman/ezauth/internal/auth"
+	"github.com/ConnorBrightman/ezauth/internal/httpx"
 )
 
 type LoginRequest struct {

@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ConnorBrightman/EZauth/internal/httpx"
-	"github.com/ConnorBrightman/EZauth/internal/middleware"
+	"github.com/ConnorBrightman/ezauth/internal/httpx"
+	"github.com/ConnorBrightman/ezauth/internal/middleware"
 )
 
 // MeHandler returns the currently authenticated user's info

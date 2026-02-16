@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ConnorBrightman/EZauth/internal/api"
-	"github.com/ConnorBrightman/EZauth/internal/auth"
-	"github.com/ConnorBrightman/EZauth/internal/config"
-	"github.com/ConnorBrightman/EZauth/internal/middleware"
+	"github.com/ConnorBrightman/ezauth/internal/api"
+	"github.com/ConnorBrightman/ezauth/internal/auth"
+	"github.com/ConnorBrightman/ezauth/internal/config"
+	"github.com/ConnorBrightman/ezauth/internal/middleware"
 )
 
 func main() {
@@ -58,6 +58,6 @@ func main() {
 |_____|_____|__,|___|_| |_|_|              
                                                                  
 `)
-	log.Printf("Starting EZauth with storage=%s, port=%s, AccesstokenExpiry=%s\n", cfg.Storage, cfg.Port, cfg.AccessTokenExpiry)
+	log.Printf("Starting ezauth with storage=%s, port=%s, AccesstokenExpiry=%s\n", cfg.Storage, cfg.Port, cfg.AccessTokenExpiry)
 	log.Fatal(server.ListenAndServe())
 }

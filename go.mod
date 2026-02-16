@@ -1,8 +1,9 @@
-module github.com/ConnorBrightman/EZauth
+module github.com/ConnorBrightman/ezauth
 
 go 1.25.6
 
 require (
+	github.com/ConnorBrightman/ezauth v0.0.0-20260216184538-fb7c905137b5
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/spf13/viper v1.21.0

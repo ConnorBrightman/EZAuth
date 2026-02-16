@@ -1,1 +1,1 @@
-# EZAuth
+# ezauth
