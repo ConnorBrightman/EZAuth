@@ -1,8 +1,9 @@
 package auth
 
 type User struct {
-	ID           string `json:"id"`
-	Email        string `json:"email"`
-	Password     string `json:"password"`      // hashed
-	RefreshToken string `json:"refresh_token"` // hashed refresh token
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	Password      string `json:"password"`       // hashed
+	RefreshToken  string `json:"refresh_token"`  // hashed refresh token
+	RefreshExpiry int64  `json:"refresh_expiry"` // Unix timestamp
 }

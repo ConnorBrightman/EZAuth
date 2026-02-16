@@ -12,9 +12,10 @@ import (
 
 // Service contains business logic for authentication
 type Service struct {
-	repo        UserRepository
-	jwtSecret   []byte
-	tokenExpiry time.Duration
+	repo               UserRepository
+	jwtSecret          []byte
+	accessTokenExpiry  time.Duration
+	refreshTokenExpiry time.Duration
 }
 
 // LoginInput represents login request data
@@ -25,11 +26,12 @@ type LoginInput struct {
 }
 
 // NewService creates a new Service instance with a secret key for JWT
-func NewService(repo UserRepository, jwtSecret []byte, tokenExpiry time.Duration) *Service {
+func NewService(repo UserRepository, jwtSecret []byte, accessTokenExpiry, refreshTokenExpiry time.Duration) *Service {
 	return &Service{
-		repo:        repo,
-		jwtSecret:   jwtSecret,
-		tokenExpiry: tokenExpiry,
+		repo:               repo,
+		jwtSecret:          jwtSecret,
+		accessTokenExpiry:  accessTokenExpiry,
+		refreshTokenExpiry: refreshTokenExpiry,
 	}
 }
 
@@ -76,7 +78,7 @@ func (s *Service) GenerateAccessToken(user User) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
 		"email":   user.Email,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(), // token expires in 24h
+		"exp":     time.Now().Add(s.accessTokenExpiry).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -112,13 +114,17 @@ func (s *Service) LoginWithTokens(input LoginInput) (accessToken string, refresh
 		return "", "", err
 	}
 
-	// Store hashed refresh token in repo
+	// Hash refresh token
 	hashedRefresh, err := HashPassword(refreshToken)
 	if err != nil {
 		return "", "", err
 	}
 
+	// Save to user
 	user.RefreshToken = hashedRefresh
+	user.RefreshExpiry = time.Now().Add(s.refreshTokenExpiry).Unix()
+
+	// Persist to repo
 	if err := s.repo.Update(user); err != nil {
 		return "", "", err
 	}
@@ -140,36 +146,43 @@ func (s *Service) RefreshAccessToken(userEmail, refreshToken string) (string, er
 	return s.GenerateAccessToken(user)
 }
 
-// RefreshTokens verifies the old refresh token and returns new access + refresh tokens
 func (s *Service) RefreshTokens(userEmail, oldRefreshToken string) (newAccessToken, newRefreshToken string, err error) {
 	user, err := s.repo.FindByEmail(userEmail)
 	if err != nil {
 		return "", "", errors.New("user not found")
 	}
 
-	// Check old refresh token
+	// 1. Check expiry first
+	if time.Now().Unix() > user.RefreshExpiry {
+		return "", "", errors.New("refresh token expired")
+	}
+
+	// 2. Check token hash
 	if err := CheckPassword(oldRefreshToken, user.RefreshToken); err != nil {
 		return "", "", errors.New("invalid refresh token")
 	}
 
-	// Generate new access token
+	// 3. Generate new tokens
 	newAccessToken, err = s.GenerateAccessToken(user)
 	if err != nil {
 		return "", "", err
 	}
 
-	// Generate new refresh token
 	newRefreshToken, err = GenerateRefreshToken()
 	if err != nil {
 		return "", "", err
 	}
 
-	// Store hashed new refresh token
+	// 4. Hash new refresh token and set new expiry
 	hashedRefresh, err := HashPassword(newRefreshToken)
 	if err != nil {
 		return "", "", err
 	}
+
 	user.RefreshToken = hashedRefresh
+	user.RefreshExpiry = time.Now().Add(s.refreshTokenExpiry).Unix()
+
+	// 5. Save updated user
 	if err := s.repo.Update(user); err != nil {
 		return "", "", err
 	}

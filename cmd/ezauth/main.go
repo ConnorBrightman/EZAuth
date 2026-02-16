@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// Create auth service
-	service := auth.NewService(repo, []byte(cfg.JWTSecret), cfg.TokenExpiry)
+	service := auth.NewService(repo, []byte(cfg.JWTSecret), cfg.AccessTokenExpiry, cfg.RefreshTokenExpiry)
 
 	// Create router with JWT secret
 	router := api.NewRouter(service, []byte(cfg.JWTSecret))
@@ -51,19 +51,13 @@ func main() {
 		Handler: handler,
 	}
 
-	log.Println(`
-
-                                                   
-                             
+	log.Println(`                       
  _____ _____         _   _   
 |   __|__   |___ _ _| |_| |_ 
 |   __|   __| .'| | |  _|   |
-|_____|_____|__,|___|_| |_|_|
-                             
-                                                   
-                                   
+|_____|_____|__,|___|_| |_|_|              
                                                                  
 `)
-	log.Printf("Starting EZauth with storage=%s, port=%s, tokenExpiry=%s\n", cfg.Storage, cfg.Port, cfg.TokenExpiry)
+	log.Printf("Starting EZauth with storage=%s, port=%s, AccesstokenExpiry=%s\n", cfg.Storage, cfg.Port, cfg.AccessTokenExpiry)
 	log.Fatal(server.ListenAndServe())
 }
