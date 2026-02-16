@@ -17,8 +17,8 @@ jobs:
         goarch: [amd64]
 
     steps:
-      # 1. Checkout repo
-      - name: Checkout code
+      # 1. Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       # 2. Setup Go
@@ -32,20 +32,21 @@ jobs:
         run: |
           echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
 
-      # 4. Build binaries
+      # 4. Build binary with version embedded
       - name: Build binary
         run: |
           mkdir -p release
+          ldflags="-X 'main.version=${VERSION}'"
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            output="release/ezauth_${VERSION}.exe"
+            output="release/ezauth.exe"
           else
-            output="release/ezauth_${VERSION}"
+            output="release/ezauth"
           fi
-          echo "Building $output"
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o $output ./cmd/ezauth
+          echo "Building $output with version $VERSION"
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags="$ldflags" -o $output ./cmd/ezauth
 
       # 5. Upload binaries to GitHub Release
       - name: Upload to Release
-        uses: softprops/action-gh-release@v1  # use v1 to avoid finalize/retry errors
+        uses: softprops/action-gh-release@v1
         with:
           files: release/*
