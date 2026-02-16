@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ConnorBrightman/EZauth/internal/auth"
-	"github.com/ConnorBrightman/EZauth/internal/httpx"
+	"github.com/ConnorBrightman/ezauth/internal/auth"
+	"github.com/ConnorBrightman/ezauth/internal/httpx"
 )
 
 type RefreshRequest struct {
