@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ConnorBrightman/ezauth/internal/config"
+	"github.com/ConnorBrightman/ezauth/internal/templates"
 )
 
 func runInit() {
@@ -24,6 +25,8 @@ func runInit() {
 	} else {
 		log.Println("📁 public/ directory already exists")
 	}
+
+	templates.CreateStarterTemplates()
 
 	fmt.Println("✅ ezauth initialized successfully.")
 	fmt.Println("Next step: run `ezauth start`")
