@@ -1,5 +1,55 @@
-build:
-	go build -o ezauth ./cmd/ezauth
+name: Release
 
-run:
-	go run ./cmd/ezauth
+on:
+  push:
+    tags:
+      - 'v*'   # triggers on tags like v0.1.0
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    name: Build and Release Binaries
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21' # use your Go version
+
+      - name: Determine version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Build Linux binary
+        run: GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=${{ env.VERSION }}" -o ezauth-linux ./cmd/ezauth
+
+      - name: Build macOS binary (amd64)
+        run: GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Version=${{ env.VERSION }}" -o ezauth-mac ./cmd/ezauth
+
+      - name: Build macOS binary (arm64)
+        run: GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.Version=${{ env.VERSION }}" -o ezauth-mac-arm ./cmd/ezauth
+
+      - name: Build Windows binary
+        run: GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=${{ env.VERSION }}" -o ezauth.exe ./cmd/ezauth
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION }}
+          files: |
+            ezauth-linux
+            ezauth-mac
+            ezauth-mac-arm
+            ezauth.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,11 @@
+PORT: "8080"
+HOST: "127.0.0.1"
+
+JWT_SECRET: "super-secret-key"
+ACCESS_TOKEN_EXPIRY: 5m        # 5 minutes for JWT access token
+REFRESH_TOKEN_EXPIRY: 168h       # 7 days for refresh token NEEDS to be in hours due to viper.
+
+STORAGE: "file"                 # options: memory, file, sqlite
+FILE_PATH: "./data/users.json"  # used if STORAGE = file
+
+LOGGING_ENABLED: true           # optional logging

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -13,15 +12,6 @@ func main() {
 }
 
 func Execute() {
-	// Banner
-	log.Println(`
- _____ _____         _   _   
-|   __|__   |___ _ _| |_| |_ 
-|   __|   __| .'| | |  _|   |
-|_____|_____|__,|___|_| |_|_|              
-Authentication made EZ          
-`)
-
 	if len(os.Args) < 2 {
 		printHelp()
 		return

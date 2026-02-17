@@ -60,6 +60,15 @@ func runStart() {
 		Handler: handler,
 	}
 
+	// Banner
+	log.Println(`
+ _____ _____         _   _   
+|   __|__   |___ _ _| |_| |_ 
+|   __|   __| .'| | |  _|   |
+|_____|_____|__,|___|_| |_|_|              
+Authentication made EZ          
+`)
+
 	log.Printf("Starting EZauth with storage=%s, port=%s, AccessTokenExpiry=%s, RefreshTokenExpiry=%s\n",
 		cfg.Storage, cfg.Port, cfg.AccessTokenExpiry, cfg.RefreshTokenExpiry)
 	log.Fatal(server.ListenAndServe())
