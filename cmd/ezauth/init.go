@@ -26,7 +26,12 @@ func runInit() {
 		log.Println("📁 public/ directory already exists")
 	}
 
-	templates.CreateStarterTemplates()
+	// Scaffold starter HTML templates
+	if err := templates.GenerateTemplates(); err != nil {
+		log.Printf("❌ Failed to generate templates: %v", err)
+	} else {
+		log.Println("✅ Starter HTML templates generated in public/")
+	}
 
 	fmt.Println("✅ ezauth initialized successfully.")
 	fmt.Println("Next step: run `ezauth start`")

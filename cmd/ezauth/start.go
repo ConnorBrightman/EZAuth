@@ -80,7 +80,7 @@ func runStart() {
 |   __|__   |___ _ _| |_| |_ 
 |   __|   __| .'| | |  _|   |
 |_____|_____|__,|___|_| |_|_|              
-Authentication made EZ          
+-- Authentication made EZ. --         
 
 `)
 
