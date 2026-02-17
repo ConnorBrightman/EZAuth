@@ -102,7 +102,7 @@ func InitConfig() error {
 
 	// Create empty users.json
 	if _, err := os.Stat(usersPath); os.IsNotExist(err) {
-		if err := os.WriteFile(usersPath, []byte("[]"), 0644); err != nil {
+		if err := os.WriteFile(usersPath, []byte("{}"), 0644); err != nil {
 			return fmt.Errorf("failed to create users.json: %v", err)
 		}
 	}
