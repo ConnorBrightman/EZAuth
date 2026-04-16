@@ -13,7 +13,7 @@ type HealthResponse struct {
 
 func HealthHandler(version string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		httpx.JSON(w, http.StatusOK, HealthResponse{
+		httpx.WriteJSON(w, http.StatusOK, HealthResponse{
 			Status:  "healthy",
 			Version: version,
 		})

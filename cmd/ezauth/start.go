@@ -39,6 +39,11 @@ func runStart() {
 		if err != nil {
 			log.Fatal(err)
 		}
+	case "sqlite":
+		repo, err = auth.NewSQLiteUserRepository(cfg.DatabasePath)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "memory":
 		repo = auth.NewMemoryUserRepository()
 	default:

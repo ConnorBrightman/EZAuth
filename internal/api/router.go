@@ -38,5 +38,11 @@ func NewRouter(service *auth.Service, secret []byte) http.Handler {
 	refreshHandler = httpx.AllowMethod(http.MethodPost, refreshHandler)
 	mux.Handle("/auth/refresh", refreshHandler)
 
+	// Logout
+	logoutHandler := handlers.LogoutHandler(service)
+	logoutHandler = middleware.JWTMiddleware(secret, logoutHandler)
+	logoutHandler = httpx.AllowMethod(http.MethodPost, logoutHandler)
+	mux.Handle("/auth/logout", logoutHandler)
+
 	return mux
 }

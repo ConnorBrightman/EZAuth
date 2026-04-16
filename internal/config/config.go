@@ -18,6 +18,7 @@ type Config struct {
 	RefreshTokenExpiry time.Duration
 	Storage            string
 	FilePath           string // used if Storage == file
+	DatabasePath       string // used if Storage == sqlite
 	LoggingEnabled     bool
 }
 
@@ -38,6 +39,7 @@ func LoadConfig() *Config {
 	viper.SetDefault("REFRESH_TOKEN_EXPIRY", "168h")
 	viper.SetDefault("STORAGE", "memory")
 	viper.SetDefault("FILE_PATH", filepath.Join("ezauth-data", "users.json"))
+	viper.SetDefault("DATABASE_PATH", filepath.Join("ezauth-data", "ezauth.db"))
 	viper.SetDefault("LOGGING_ENABLED", true)
 
 	// Read config
@@ -65,6 +67,7 @@ func LoadConfig() *Config {
 		RefreshTokenExpiry: refreshDur,
 		Storage:            viper.GetString("STORAGE"),
 		FilePath:           viper.GetString("FILE_PATH"),
+		DatabasePath:       viper.GetString("DATABASE_PATH"),
 		LoggingEnabled:     viper.GetBool("LOGGING_ENABLED"),
 	}
 }
@@ -93,6 +96,7 @@ func InitConfig() error {
 	viper.Set("REFRESH_TOKEN_EXPIRY", "168h")
 	viper.Set("STORAGE", "file")
 	viper.Set("FILE_PATH", usersPath)
+	viper.Set("DATABASE_PATH", filepath.Join(dataDir, "ezauth.db"))
 	viper.Set("LOGGING_ENABLED", true)
 
 	// Write config.yaml to root

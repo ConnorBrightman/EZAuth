@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/ConnorBrightman/ezauth/internal/auth"
@@ -18,16 +19,30 @@ func RegisterHandler(service *auth.Service) http.Handler {
 		var req RegisterRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			httpx.Error(w, http.StatusBadRequest, "invalid JSON body")
+			httpx.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid JSON body")
+			return
+		}
+
+		if !httpx.ValidEmail(req.Email) {
+			httpx.WriteError(w, http.StatusBadRequest, "INVALID_EMAIL", "invalid email address")
+			return
+		}
+
+		if ok, reason := httpx.ValidPassword(req.Password); !ok {
+			httpx.WriteError(w, http.StatusBadRequest, "INVALID_PASSWORD", reason)
 			return
 		}
 
 		if err := service.Register(req.Email, req.Password); err != nil {
-			httpx.Error(w, http.StatusBadRequest, err.Error())
+			if errors.Is(err, auth.ErrUserExists) {
+				httpx.WriteError(w, http.StatusConflict, "EMAIL_ALREADY_EXISTS", "a user with that email already exists")
+				return
+			}
+			httpx.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", err.Error())
 			return
 		}
 
-		httpx.JSON(w, http.StatusCreated, map[string]string{
+		httpx.WriteJSON(w, http.StatusCreated, map[string]string{
 			"message": "user registered successfully",
 		})
 	})

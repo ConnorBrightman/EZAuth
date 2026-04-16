@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/ConnorBrightman/ezauth/internal/auth"
@@ -20,7 +19,12 @@ func LoginHandler(service *auth.Service) http.Handler {
 
 		// Parse JSON request
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			httpx.Error(w, http.StatusBadRequest, "invalid JSON body")
+			httpx.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid JSON body")
+			return
+		}
+
+		if !httpx.ValidEmail(req.Email) {
+			httpx.WriteError(w, http.StatusBadRequest, "INVALID_EMAIL", "invalid email address")
 			return
 		}
 
@@ -30,15 +34,14 @@ func LoginHandler(service *auth.Service) http.Handler {
 			Password: req.Password,
 		})
 		if err != nil {
-			httpx.Error(w, http.StatusBadRequest, err.Error())
+			httpx.WriteError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "invalid credentials")
 			return
 		}
 
 		// Respond with tokens
-		httpx.JSON(w, http.StatusOK, map[string]string{
+		httpx.WriteJSON(w, http.StatusOK, map[string]string{
 			"access_token":  accessToken,
 			"refresh_token": refreshToken,
 		})
-		fmt.Println("Logged in")
 	})
 }

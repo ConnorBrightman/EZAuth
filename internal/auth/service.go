@@ -146,6 +146,17 @@ func (s *Service) RefreshAccessToken(userEmail, refreshToken string) (string, er
 	return s.GenerateAccessToken(user)
 }
 
+// Logout clears the user's refresh token, invalidating any active session.
+func (s *Service) Logout(email string) error {
+	user, err := s.repo.FindByEmail(email)
+	if err != nil {
+		return err
+	}
+	user.RefreshToken = ""
+	user.RefreshExpiry = 0
+	return s.repo.Update(user)
+}
+
 func (s *Service) RefreshTokens(userEmail, oldRefreshToken string) (newAccessToken, newRefreshToken string, err error) {
 	user, err := s.repo.FindByEmail(userEmail)
 	if err != nil {

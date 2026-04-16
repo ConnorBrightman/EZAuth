@@ -17,17 +17,17 @@ func RefreshHandler(service *auth.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req RefreshRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			httpx.Error(w, http.StatusBadRequest, "invalid JSON body")
+			httpx.WriteError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid JSON body")
 			return
 		}
 
 		accessToken, refreshToken, err := service.RefreshTokens(req.Email, req.RefreshToken)
 		if err != nil {
-			httpx.Error(w, http.StatusUnauthorized, err.Error())
+			httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Could not refresh tokens")
 			return
 		}
 
-		httpx.JSON(w, http.StatusOK, map[string]string{
+		httpx.WriteJSON(w, http.StatusOK, map[string]string{
 			"access_token":  accessToken,
 			"refresh_token": refreshToken,
 		})
