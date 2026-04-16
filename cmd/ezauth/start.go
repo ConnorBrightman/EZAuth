@@ -56,21 +56,17 @@ func runStart() {
 	// Create router with JWT secret
 	router := api.NewRouter(service, []byte(cfg.JWTSecret))
 
-	// --- Serve static files ---
-	// Static folder for /index.html, /register.html etc
-	fsHandler := fileserver.ServePublic()
-	// Wrap router: static files first, then API routes
+	// Serve static files from ./public if it exists
 	mainHandler := http.NewServeMux()
-	mainHandler.Handle("/", fsHandler)
+	if _, err := os.Stat("public"); err == nil {
+		mainHandler.Handle("/", fileserver.ServePublic())
+		mainHandler.HandleFunc("/register", fileserver.ServePage("/register", "register.html"))
+		mainHandler.HandleFunc("/login", fileserver.ServePage("/login", "login.html"))
+	}
 
-	// Optional: map clean URLs to HTML files
-	mainHandler.HandleFunc("/register", fileserver.ServePage("/register", "register.html"))
-	mainHandler.HandleFunc("/login", fileserver.ServePage("/login", "login.html"))
-
-	// Mount API router under /auth
+	// Mount API router
 	mainHandler.Handle("/auth/", router)
 
-	// Wrap with logging middleware
 	handler := middleware.Logging(mainHandler)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
@@ -79,17 +75,23 @@ func runStart() {
 		Handler: handler,
 	}
 
-	// Banner
 	fmt.Printf(`
- _____ _____         _   _   
-|   __|__   |___ _ _| |_| |_ 
+ _____ _____         _   _
+|   __|__   |___ _ _| |_| |_
 |   __|   __| .'| | |  _|   |
-|_____|_____|__,|___|_| |_|_|              
--- Authentication made EZ. --         
+|_____|_____|__,|___|_| |_|_|
+-- Authentication made EZ. --
 
 `)
+	fmt.Printf("storage: %s   port: %s   access token expiry: %s\n\n", cfg.Storage, cfg.Port, cfg.AccessTokenExpiry)
+	fmt.Printf("API:  http://%s/auth\n", addr)
+	if _, err := os.Stat("public"); err == nil {
+		fmt.Printf("Demo: http://%s\n", addr)
+	}
+	fmt.Println()
 
-	fmt.Printf("Starting EZauth with storage=%s, port=%s, AccessTokenExpiry=%s, RefreshTokenExpiry=%s\n",
-		cfg.Storage, cfg.Port, cfg.AccessTokenExpiry, cfg.RefreshTokenExpiry)
-	log.Fatal(server.ListenAndServe())
+	if err := server.ListenAndServe(); err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
 }

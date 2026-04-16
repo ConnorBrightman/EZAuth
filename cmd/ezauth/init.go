@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/ConnorBrightman/ezauth/internal/config"
@@ -10,29 +9,26 @@ import (
 )
 
 func runInit() {
-	// Initialize config and data
 	if err := config.InitConfig(); err != nil {
-		log.Fatal(err)
+		fmt.Println("Error:", err)
+		os.Exit(1)
 	}
 
-	// Create public folder for static files
 	publicDir := "public"
 	if _, err := os.Stat(publicDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(publicDir, 0755); err != nil {
-			log.Fatalf("Failed to create public directory: %v", err)
+			fmt.Println("Error: failed to create public directory:", err)
+			os.Exit(1)
 		}
-		log.Println("✅ Created public/ directory for static files")
-	} else {
-		log.Println("📁 public/ directory already exists")
 	}
 
-	// Scaffold starter HTML templates
 	if err := templates.GenerateTemplates(); err != nil {
-		log.Printf("❌ Failed to generate templates: %v", err)
-	} else {
-		log.Println("✅ Starter HTML templates generated in public/")
+		fmt.Println("Error: failed to generate templates:", err)
+		os.Exit(1)
 	}
 
-	fmt.Println("✅ ezauth initialized successfully.")
-	fmt.Println("Next step: run `ezauth start`")
+	fmt.Println("✅ config.yaml created")
+	fmt.Println("✅ Demo pages written to public/")
+	fmt.Println("")
+	fmt.Println("Run `ezauth start` to start the server")
 }
