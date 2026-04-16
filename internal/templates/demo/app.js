@@ -1,15 +1,24 @@
 const API_BASE = "";
 
-function setToken(token) {
-    localStorage.setItem("token", token);
+function setTokens(accessToken, refreshToken) {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
 }
 
-function getToken() {
-    return localStorage.getItem("token");
+function getAccessToken() {
+    return localStorage.getItem("access_token");
 }
 
-function logout() {
-    localStorage.removeItem("token");
+async function logout() {
+    const token = getAccessToken();
+    if (token) {
+        await fetch(API_BASE + "/auth/logout", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token }
+        }).catch(() => {});
+    }
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     window.location.href = "/login.html";
 }
 
@@ -26,13 +35,13 @@ async function loginUser(event) {
         body: JSON.stringify({ email, password })
     });
 
-    const data = await res.json();
+    const body = await res.json();
 
     if (res.ok) {
-        setToken(data.token);
+        setTokens(body.data.access_token, body.data.refresh_token);
         window.location.href = "/me.html";
     } else {
-        document.getElementById("message").innerText = data.error || "Login failed";
+        document.getElementById("message").innerText = body.error?.message || "Login failed";
     }
 }
 
@@ -49,18 +58,18 @@ async function registerUser(event) {
         body: JSON.stringify({ email, password })
     });
 
-    const data = await res.json();
+    const body = await res.json();
 
     if (res.ok) {
         window.location.href = "/login.html";
     } else {
-        document.getElementById("message").innerText = data.error || "Register failed";
+        document.getElementById("message").innerText = body.error?.message || "Registration failed";
     }
 }
 
 // GET ME
 async function loadMe() {
-    const token = getToken();
+    const token = getAccessToken();
 
     if (!token) {
         window.location.href = "/login.html";
@@ -68,9 +77,7 @@ async function loadMe() {
     }
 
     const res = await fetch(API_BASE + "/auth/me", {
-        headers: {
-            "Authorization": "Bearer " + token
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
 
     if (!res.ok) {
@@ -78,7 +85,9 @@ async function loadMe() {
         return;
     }
 
-    const data = await res.json();
+    const body = await res.json();
+    const user = body.data;
+
     document.getElementById("user-info").innerText =
-        JSON.stringify(data, null, 2);
+        `Email:   ${user.email}\nUser ID: ${user.user_id}`;
 }
