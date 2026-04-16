@@ -38,4 +38,4 @@ jobs:
             ezauth-mac-arm
             ezauth.exe
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # Use PAT here
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

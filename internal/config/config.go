@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -9,6 +11,14 @@ import (
 
 	"github.com/spf13/viper"
 )
+
+func randomSecret() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		log.Fatalf("failed to generate JWT secret: %v", err)
+	}
+	return base64.URLEncoding.EncodeToString(b)
+}
 
 type Config struct {
 	Port               string
@@ -44,7 +54,11 @@ func LoadConfig() *Config {
 
 	// Read config
 	if err := viper.ReadInConfig(); err != nil {
-		log.Println("No config file found, using defaults and environment variables")
+		viper.Set("JWT_SECRET", randomSecret())
+		log.Println("⚠  No config.yaml found — running in ephemeral mode")
+		log.Println("   Storage: memory (users lost on restart)")
+		log.Println("   JWT secret: randomly generated (sessions lost on restart)")
+		log.Println("   Run `ezauth init` to set up persistent storage")
 	} else {
 		log.Println("Using config file:", viper.ConfigFileUsed())
 	}
@@ -91,7 +105,7 @@ func InitConfig() error {
 	// Set default values
 	viper.Set("PORT", "8080")
 	viper.Set("HOST", "127.0.0.1")
-	viper.Set("JWT_SECRET", "super-secret-key")
+	viper.Set("JWT_SECRET", randomSecret())
 	viper.Set("ACCESS_TOKEN_EXPIRY", "5m")
 	viper.Set("REFRESH_TOKEN_EXPIRY", "168h")
 	viper.Set("STORAGE", "file")

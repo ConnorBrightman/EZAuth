@@ -8,7 +8,21 @@ ezauth runs as a standalone HTTP server. Your application talks to it over REST,
 
 ## Installation
 
-**Build from source** (requires Go 1.21+):
+Download the latest binary for your platform from the [Releases page](https://github.com/ConnorBrightman/ezauth/releases):
+
+| Platform | File |
+|----------|------|
+| Windows | `ezauth.exe` |
+| macOS (Apple Silicon) | `ezauth-mac-arm` |
+| macOS (Intel) | `ezauth-mac` |
+| Linux | `ezauth-linux` |
+
+On macOS/Linux, make it executable after downloading:
+```bash
+chmod +x ezauth-mac-arm  # or ezauth-linux
+```
+
+**Or build from source** (requires Go 1.21+):
 
 ```bash
 git clone https://github.com/ConnorBrightman/ezauth.git
@@ -18,15 +32,22 @@ go install ./cmd/ezauth
 
 ## Quick start
 
-```bash
-# 1. Initialise — creates config.yaml and data directory in the current folder
-ezauth init
+**Zero config** — just run it:
 
-# 2. Start the server
+```bash
 ezauth start
 ```
 
-The server starts on `http://127.0.0.1:8080` by default.
+The server starts on `http://127.0.0.1:8080`. Users are stored in memory and sessions are lost on restart. Good for quick testing.
+
+**Persistent setup** — run this once in your project directory:
+
+```bash
+ezauth init   # generates config.yaml with a unique JWT secret and SQLite storage
+ezauth start
+```
+
+Users are stored in `ezauth-data/ezauth.db` and survive restarts.
 
 ## Configuration
 
