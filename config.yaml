@@ -1,9 +1,10 @@
-access_token_expiry: 5m
-file_path: ezauth-data/users.json
-database_path: ezauth-data/ezauth.db
 host: 127.0.0.1
-jwt_secret: super-secret-key
-logging_enabled: true
-port: "8070"
+port: "8080"
+jwt_secret: s9Ln6sCg84fl4fIwqaVFJYNGJGUDuDdjX9mjpcjFavM=
+access_token_expiry: 5m
 refresh_token_expiry: 168h
-storage: sqlite
+storage: file
+file_path: ezauth-data\users.json
+database_path: ezauth-data\ezauth.db
+database_url: "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+logging_enabled: true

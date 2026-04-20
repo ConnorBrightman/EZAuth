@@ -29,6 +29,7 @@ type Config struct {
 	Storage            string
 	FilePath           string // used if Storage == file
 	DatabasePath       string // used if Storage == sqlite
+	DatabaseURL        string // used if Storage == postgres
 	LoggingEnabled     bool
 }
 
@@ -50,6 +51,7 @@ func LoadConfig() *Config {
 	viper.SetDefault("STORAGE", "memory")
 	viper.SetDefault("FILE_PATH", filepath.Join("ezauth-data", "users.json"))
 	viper.SetDefault("DATABASE_PATH", filepath.Join("ezauth-data", "ezauth.db"))
+	viper.SetDefault("DATABASE_URL", "for postgres")
 	viper.SetDefault("LOGGING_ENABLED", true)
 
 	// Read config
@@ -82,6 +84,7 @@ func LoadConfig() *Config {
 		Storage:            viper.GetString("STORAGE"),
 		FilePath:           viper.GetString("FILE_PATH"),
 		DatabasePath:       viper.GetString("DATABASE_PATH"),
+		DatabaseURL:        viper.GetString("DATABASE_URL"),
 		LoggingEnabled:     viper.GetBool("LOGGING_ENABLED"),
 	}
 }
@@ -92,33 +95,30 @@ func InitConfig() error {
 	dataDir := "ezauth-data"
 	usersPath := filepath.Join(dataDir, "users.json")
 
-	// Don't overwrite existing config
 	if _, err := os.Stat(configPath); err == nil {
 		return fmt.Errorf("config.yaml already exists in current directory")
 	}
 
-	// Create data directory
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		return fmt.Errorf("failed to create ezauth-data directory: %v", err)
 	}
 
-	// Set default values
-	viper.Set("PORT", "8080")
-	viper.Set("HOST", "127.0.0.1")
-	viper.Set("JWT_SECRET", randomSecret())
-	viper.Set("ACCESS_TOKEN_EXPIRY", "5m")
-	viper.Set("REFRESH_TOKEN_EXPIRY", "168h")
-	viper.Set("STORAGE", "file")
-	viper.Set("FILE_PATH", usersPath)
-	viper.Set("DATABASE_PATH", filepath.Join(dataDir, "ezauth.db"))
-	viper.Set("LOGGING_ENABLED", true)
+	content := fmt.Sprintf(`host: 127.0.0.1
+port: "8080"
+jwt_secret: %s
+access_token_expiry: 5m
+refresh_token_expiry: 168h
+storage: file
+file_path: %s
+database_path: %s
+database_url: "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+logging_enabled: true
+`, randomSecret(), usersPath, filepath.Join(dataDir, "ezauth.db"))
 
-	// Write config.yaml to root
-	if err := viper.WriteConfigAs(configPath); err != nil {
+	if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write config.yaml: %v", err)
 	}
 
-	// Create empty users.json
 	if _, err := os.Stat(usersPath); os.IsNotExist(err) {
 		if err := os.WriteFile(usersPath, []byte("{}"), 0644); err != nil {
 			return fmt.Errorf("failed to create users.json: %v", err)

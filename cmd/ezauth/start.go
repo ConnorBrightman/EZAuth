@@ -44,6 +44,14 @@ func runStart() {
 		if err != nil {
 			log.Fatal(err)
 		}
+	case "postgres":
+		if cfg.DatabaseURL == "" {
+			log.Fatal("storage: postgres requires database_url to be set in config.yaml")
+		}
+		repo, err = auth.NewPostgresUserRepository(cfg.DatabaseURL)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "memory":
 		repo = auth.NewMemoryUserRepository()
 	default:
