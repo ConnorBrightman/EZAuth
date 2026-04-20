@@ -1,9 +1,0 @@
-access_token_expiry: 5m
-database_path: ezauth-data\ezauth.db
-database_url: DATABASE_URL=root:@tcp(127.0.0.1:3306)/ezauth_db
-file_path: ezauth-data\users.json
-host: 127.0.0.1
-logging_enabled: true
-port: "8080"
-refresh_token_expiry: 168h
-storage: mysql

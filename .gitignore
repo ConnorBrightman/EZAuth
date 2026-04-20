@@ -8,6 +8,8 @@ dist/
 # Env / config
 .env
 *.db
+config.yaml
+ezauth-data/
 
 # Editor
 .vscode/
