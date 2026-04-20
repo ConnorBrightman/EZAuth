@@ -24,60 +24,59 @@ func randomSecret() string {
 }
 
 type Config struct {
-	Port               string
-	Host               string
-	JWTSecret          string
-	AccessTokenExpiry  time.Duration
-	RefreshTokenExpiry time.Duration
-	Storage            string
-	FilePath           string // used if Storage == file
-	DatabasePath       string // used if Storage == sqlite
-	DatabaseURL        string // used if Storage == postgres
-	LoggingEnabled     bool
+	Port               string        `mapstructure:"port"`
+	Host               string        `mapstructure:"host"`
+	JWTSecret          string        `mapstructure:"jwt_secret"`
+	AccessTokenExpiry  time.Duration `mapstructure:"access_token_expiry"`
+	RefreshTokenExpiry time.Duration `mapstructure:"refresh_token_expiry"`
+	Storage            string        `mapstructure:"storage"`
+	FilePath           string        `mapstructure:"file_path"`
+	DatabasePath       string        `mapstructure:"database_path"`
+	DatabaseURL        string        `mapstructure:"database_url"`
+	LoggingEnabled     bool          `mapstructure:"logging_enabled"`
 }
 
 // LoadConfig loads configuration from ./config.yaml or defaults
 func LoadConfig() *Config {
-	// 1. Load the .env file into the system's environment
 	if err := godotenv.Load(); err != nil {
 		log.Println("ℹ️  No .env file found, using system environment variables")
 	}
 
 	viper.SetConfigFile("config.yaml")
 	viper.SetConfigType("yaml")
-	viper.AutomaticEnv() // This bridges System Env to Viper keys
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	// OPTIONAL: If your .env uses DATABASE_URL but you want to call
-	// it 'database_url' in your code, you can bind them:
-	// viper.BindEnv("DATABASE_URL")
+	viper.SetDefault("port", "8080")
+	viper.SetDefault("host", "127.0.0.1")
+	viper.SetDefault("storage", "memory")
 
-	// 2. Read the config file
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("⚠ No config.yaml found, using environment/defaults")
 	}
 
-	// 3. Set Defaults (in case file AND env are missing)
-	viper.SetDefault("PORT", "8080")
-	viper.SetDefault("STORAGE", "memory")
-
-	// 4. Parse Durations
-	accessDur, _ := time.ParseDuration(viper.GetString("ACCESS_TOKEN_EXPIRY"))
-	refreshDur, _ := time.ParseDuration(viper.GetString("REFRESH_TOKEN_EXPIRY"))
-
-	return &Config{
-		Port: viper.GetString("PORT"),
-		Host: viper.GetString("HOST"),
-		// This will now check the .env file first, then config.yaml, then defaults:
-		JWTSecret:          viper.GetString("JWT_SECRET"),
-		DatabaseURL:        viper.GetString("DATABASE_URL"),
-		Storage:            viper.GetString("STORAGE"),
-		AccessTokenExpiry:  accessDur,
-		RefreshTokenExpiry: refreshDur,
-		LoggingEnabled:     viper.GetBool("LOGGING_ENABLED"),
+	// Unmarshal all keys (including file_path, database_path) into the struct
+	var cfg Config
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Fatalf("failed to parse config: %v", err)
 	}
+
+	// viper.Unmarshal can't decode duration strings — parse them manually
+	cfg.AccessTokenExpiry, _ = time.ParseDuration(viper.GetString("access_token_expiry"))
+	cfg.RefreshTokenExpiry, _ = time.ParseDuration(viper.GetString("refresh_token_expiry"))
+
+	// .env overrides for secrets
+	if v := viper.GetString("JWT_SECRET"); v != "" {
+		cfg.JWTSecret = v
+	}
+	if v := viper.GetString("DATABASE_URL"); v != "" {
+		cfg.DatabaseURL = v
+	}
+
+	return &cfg
 }
 
-// InitConfig bootstraps config.yaml and .env in current directory
+// InitConfig bootstraps config.yaml and .env in the current directory
 func InitConfig() error {
 	configPath := "config.yaml"
 	envPath := ".env"
@@ -138,7 +137,12 @@ func InitConfig() error {
 	}
 
 	// 5. Create Data Directory
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %v", err)
+	}
+	absDataDir := filepath.Join(cwd, dataDir)
+	if err := os.MkdirAll(absDataDir, 0755); err != nil {
 		return fmt.Errorf("failed to create data directory: %v", err)
 	}
 
@@ -154,9 +158,9 @@ func InitConfig() error {
 	viper.Set("REFRESH_TOKEN_EXPIRY", "168h")
 	viper.Set("LOGGING_ENABLED", true)
 
-	// Local paths
-	viper.Set("FILE_PATH", filepath.Join(dataDir, "users.json"))
-	viper.Set("DATABASE_PATH", filepath.Join(dataDir, "ezauth.db"))
+	// Absolute paths so ezauth can be run from any directory
+	viper.Set("FILE_PATH", filepath.Join(absDataDir, "users.json"))
+	viper.Set("DATABASE_PATH", filepath.Join(absDataDir, "ezauth.db"))
 
 	// REMOVED: viper.Set("DATABASE_URL", dsn)
 	// By not "Setting" it here, it won't show up in config.yaml
@@ -168,7 +172,7 @@ func InitConfig() error {
 
 	// 9. Create users.json if file mode was selected
 	if selectedStorage == "file" {
-		usersPath := filepath.Join(dataDir, "users.json")
+		usersPath := filepath.Join(absDataDir, "users.json")
 		_ = os.WriteFile(usersPath, []byte("{}"), 0644)
 	}
 
