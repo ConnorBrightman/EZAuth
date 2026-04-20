@@ -95,8 +95,9 @@ func InitConfig() error {
 	fmt.Println("1. Memory (Data lost on restart)")
 	fmt.Println("2. JSON File (Local ezauth-data/users.json)")
 	fmt.Println("3. SQLite (Local ezauth-data/ezauth.db)")
-	fmt.Println("4. External DB (Postgres or MySQL)")
-	fmt.Print("Choice (1-4): ")
+	fmt.Println("4. Postgres (External Database)")
+	fmt.Println("5. MySQL (External Database)")
+	fmt.Print("Choice (1-5): ")
 
 	choice, _ := reader.ReadString('\n')
 	choice = strings.TrimSpace(choice)
@@ -105,7 +106,8 @@ func InitConfig() error {
 		"1": "memory",
 		"2": "file",
 		"3": "sqlite",
-		"4": "database",
+		"4": "postgres",
+		"5": "mysql",
 	}
 
 	selectedStorage := storageMap[choice]
@@ -115,16 +117,20 @@ func InitConfig() error {
 
 	// 3. Prepare Database DSN (Connection String)
 	var dsn string
-	if selectedStorage == "database" {
-		fmt.Println("\nEnter your Database URL (DSN):")
-		fmt.Println("Example (Postgres): postgres://user:pass@localhost:5432/dbname?sslmode=disable")
-		fmt.Println("Example (MySQL):    mysql://user:pass@tcp(localhost:3306)/dbname")
+	if selectedStorage == "postgres" || selectedStorage == "mysql" {
+		fmt.Printf("\nEnter your %s URL (DSN):\n", strings.Title(selectedStorage))
+		if selectedStorage == "postgres" {
+			fmt.Println("Example: postgres://user:pass@localhost:5432/dbname?sslmode=disable")
+		} else {
+			fmt.Println("Example: root:password@tcp(127.0.0.1:3306)/dbname")
+		}
 		fmt.Print("DSN: ")
 		dsn, _ = reader.ReadString('\n')
 		dsn = strings.TrimSpace(dsn)
 	}
 
-	// 4. Create .env for Secrets (Using OS WriteFile to ensure it hits disk)
+	// 4. Create .env for Secrets
+	// This is the ONLY place dsn and jwtSecret should be written
 	jwtSecret := randomSecret()
 	envContent := fmt.Sprintf("JWT_SECRET=%s\nDATABASE_URL=%s\n", jwtSecret, dsn)
 	if err := os.WriteFile(envPath, []byte(envContent), 0644); err != nil {
@@ -148,12 +154,12 @@ func InitConfig() error {
 	viper.Set("REFRESH_TOKEN_EXPIRY", "168h")
 	viper.Set("LOGGING_ENABLED", true)
 
-	// Paths
+	// Local paths
 	viper.Set("FILE_PATH", filepath.Join(dataDir, "users.json"))
 	viper.Set("DATABASE_PATH", filepath.Join(dataDir, "ezauth.db"))
 
-	// This ensures the key is registered in the YAML file even if empty
-	viper.Set("DATABASE_URL", dsn)
+	// REMOVED: viper.Set("DATABASE_URL", dsn)
+	// By not "Setting" it here, it won't show up in config.yaml
 
 	// 8. Write config.yaml
 	if err := viper.WriteConfigAs(configPath); err != nil {
