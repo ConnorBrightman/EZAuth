@@ -1,14 +1,17 @@
 package config
 
 import (
+	"bufio"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -35,96 +38,136 @@ type Config struct {
 
 // LoadConfig loads configuration from ./config.yaml or defaults
 func LoadConfig() *Config {
-	configFile := "config.yaml"
+	// 1. Load the .env file into the system's environment
+	if err := godotenv.Load(); err != nil {
+		log.Println("ℹ️  No .env file found, using system environment variables")
+	}
 
-	// Force viper to read the exact file
-	viper.SetConfigFile(configFile)
+	viper.SetConfigFile("config.yaml")
 	viper.SetConfigType("yaml")
-	viper.AutomaticEnv() // allow env overrides
+	viper.AutomaticEnv() // This bridges System Env to Viper keys
 
-	// Default values
-	viper.SetDefault("PORT", "8080")
-	viper.SetDefault("HOST", "127.0.0.1")
-	viper.SetDefault("JWT_SECRET", "super-secret-key")
-	viper.SetDefault("ACCESS_TOKEN_EXPIRY", "5m")
-	viper.SetDefault("REFRESH_TOKEN_EXPIRY", "168h")
-	viper.SetDefault("STORAGE", "memory")
-	viper.SetDefault("FILE_PATH", filepath.Join("ezauth-data", "users.json"))
-	viper.SetDefault("DATABASE_PATH", filepath.Join("ezauth-data", "ezauth.db"))
-	viper.SetDefault("DATABASE_URL", "for postgres")
-	viper.SetDefault("LOGGING_ENABLED", true)
+	// OPTIONAL: If your .env uses DATABASE_URL but you want to call
+	// it 'database_url' in your code, you can bind them:
+	// viper.BindEnv("DATABASE_URL")
 
-	// Read config
+	// 2. Read the config file
 	if err := viper.ReadInConfig(); err != nil {
-		viper.Set("JWT_SECRET", randomSecret())
-		log.Println("⚠  No config.yaml found — running in ephemeral mode")
-		log.Println("   Storage: memory (users lost on restart)")
-		log.Println("   JWT secret: randomly generated (sessions lost on restart)")
-		log.Println("   Run `ezauth init` to set up persistent storage")
-	} else {
-		log.Println("Using config file:", viper.ConfigFileUsed())
+		log.Println("⚠ No config.yaml found, using environment/defaults")
 	}
 
-	accessDur, err := time.ParseDuration(viper.GetString("ACCESS_TOKEN_EXPIRY"))
-	if err != nil {
-		log.Fatalf("Invalid ACCESS_TOKEN_EXPIRY: %v", err)
-	}
+	// 3. Set Defaults (in case file AND env are missing)
+	viper.SetDefault("PORT", "8080")
+	viper.SetDefault("STORAGE", "memory")
 
-	refreshDur, err := time.ParseDuration(viper.GetString("REFRESH_TOKEN_EXPIRY"))
-	if err != nil {
-		log.Fatalf("Invalid REFRESH_TOKEN_EXPIRY: %v", err)
-	}
+	// 4. Parse Durations
+	accessDur, _ := time.ParseDuration(viper.GetString("ACCESS_TOKEN_EXPIRY"))
+	refreshDur, _ := time.ParseDuration(viper.GetString("REFRESH_TOKEN_EXPIRY"))
 
 	return &Config{
-		Port:               viper.GetString("PORT"),
-		Host:               viper.GetString("HOST"),
+		Port: viper.GetString("PORT"),
+		Host: viper.GetString("HOST"),
+		// This will now check the .env file first, then config.yaml, then defaults:
 		JWTSecret:          viper.GetString("JWT_SECRET"),
+		DatabaseURL:        viper.GetString("DATABASE_URL"),
+		Storage:            viper.GetString("STORAGE"),
 		AccessTokenExpiry:  accessDur,
 		RefreshTokenExpiry: refreshDur,
-		Storage:            viper.GetString("STORAGE"),
-		FilePath:           viper.GetString("FILE_PATH"),
-		DatabasePath:       viper.GetString("DATABASE_PATH"),
-		DatabaseURL:        viper.GetString("DATABASE_URL"),
 		LoggingEnabled:     viper.GetBool("LOGGING_ENABLED"),
 	}
 }
 
-// InitConfig bootstraps config.yaml and ezauth-data/users.json in current directory
+// InitConfig bootstraps config.yaml and .env in current directory
 func InitConfig() error {
 	configPath := "config.yaml"
+	envPath := ".env"
 	dataDir := "ezauth-data"
-	usersPath := filepath.Join(dataDir, "users.json")
+	reader := bufio.NewReader(os.Stdin)
 
+	// 1. Prevent overwriting
 	if _, err := os.Stat(configPath); err == nil {
-		return fmt.Errorf("config.yaml already exists in current directory")
+		return fmt.Errorf("config.yaml already exists - delete it first to re-initialize")
 	}
 
+	// 2. Interactive Storage Selection
+	fmt.Println("--- EZauth Setup ---")
+	fmt.Println("Select Storage Method:")
+	fmt.Println("1. Memory (Data lost on restart)")
+	fmt.Println("2. JSON File (Local ezauth-data/users.json)")
+	fmt.Println("3. SQLite (Local ezauth-data/ezauth.db)")
+	fmt.Println("4. External DB (Postgres or MySQL)")
+	fmt.Print("Choice (1-4): ")
+
+	choice, _ := reader.ReadString('\n')
+	choice = strings.TrimSpace(choice)
+
+	storageMap := map[string]string{
+		"1": "memory",
+		"2": "file",
+		"3": "sqlite",
+		"4": "database",
+	}
+
+	selectedStorage := storageMap[choice]
+	if selectedStorage == "" {
+		selectedStorage = "memory"
+	}
+
+	// 3. Prepare Database DSN (Connection String)
+	var dsn string
+	if selectedStorage == "database" {
+		fmt.Println("\nEnter your Database URL (DSN):")
+		fmt.Println("Example (Postgres): postgres://user:pass@localhost:5432/dbname?sslmode=disable")
+		fmt.Println("Example (MySQL):    mysql://user:pass@tcp(localhost:3306)/dbname")
+		fmt.Print("DSN: ")
+		dsn, _ = reader.ReadString('\n')
+		dsn = strings.TrimSpace(dsn)
+	}
+
+	// 4. Create .env for Secrets (Using OS WriteFile to ensure it hits disk)
+	jwtSecret := randomSecret()
+	envContent := fmt.Sprintf("JWT_SECRET=%s\nDATABASE_URL=%s\n", jwtSecret, dsn)
+	if err := os.WriteFile(envPath, []byte(envContent), 0644); err != nil {
+		return fmt.Errorf("failed to create .env: %v", err)
+	}
+
+	// 5. Create Data Directory
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		return fmt.Errorf("failed to create ezauth-data directory: %v", err)
+		return fmt.Errorf("failed to create data directory: %v", err)
 	}
 
-	content := fmt.Sprintf(`host: 127.0.0.1
-port: "8080"
-jwt_secret: %s
-access_token_expiry: 5m
-refresh_token_expiry: 168h
-storage: file
-file_path: %s
-database_path: %s
-database_url: "postgres://user:password@localhost:5432/dbname?sslmode=disable"
-logging_enabled: true
-`, randomSecret(), usersPath, filepath.Join(dataDir, "ezauth.db"))
+	// 6. Tell Viper which file we are working with
+	viper.SetConfigFile(configPath)
+	viper.SetConfigType("yaml")
 
-	if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
+	// 7. Set viper values for config.yaml
+	viper.Set("PORT", "8080")
+	viper.Set("HOST", "127.0.0.1")
+	viper.Set("STORAGE", selectedStorage)
+	viper.Set("ACCESS_TOKEN_EXPIRY", "5m")
+	viper.Set("REFRESH_TOKEN_EXPIRY", "168h")
+	viper.Set("LOGGING_ENABLED", true)
+
+	// Paths
+	viper.Set("FILE_PATH", filepath.Join(dataDir, "users.json"))
+	viper.Set("DATABASE_PATH", filepath.Join(dataDir, "ezauth.db"))
+
+	// This ensures the key is registered in the YAML file even if empty
+	viper.Set("DATABASE_URL", dsn)
+
+	// 8. Write config.yaml
+	if err := viper.WriteConfigAs(configPath); err != nil {
 		return fmt.Errorf("failed to write config.yaml: %v", err)
 	}
 
-	if _, err := os.Stat(usersPath); os.IsNotExist(err) {
-		if err := os.WriteFile(usersPath, []byte("{}"), 0644); err != nil {
-			return fmt.Errorf("failed to create users.json: %v", err)
-		}
+	// 9. Create users.json if file mode was selected
+	if selectedStorage == "file" {
+		usersPath := filepath.Join(dataDir, "users.json")
+		_ = os.WriteFile(usersPath, []byte("{}"), 0644)
 	}
 
-	log.Println("✅ ezauth initialized successfully")
+	log.Println("\n✅ EZauth initialized successfully!")
+	log.Println("🔑 Secrets saved to .env")
+	log.Println("⚙️  Configuration saved to config.yaml")
 	return nil
 }

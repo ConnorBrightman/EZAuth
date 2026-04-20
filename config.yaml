@@ -1,10 +1,9 @@
-host: 127.0.0.1
-port: "8080"
-jwt_secret: s9Ln6sCg84fl4fIwqaVFJYNGJGUDuDdjX9mjpcjFavM=
 access_token_expiry: 5m
-refresh_token_expiry: 168h
-storage: file
-file_path: ezauth-data\users.json
 database_path: ezauth-data\ezauth.db
-database_url: "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+database_url: DATABASE_URL=root:@tcp(127.0.0.1:3306)/ezauth_db
+file_path: ezauth-data\users.json
+host: 127.0.0.1
 logging_enabled: true
+port: "8080"
+refresh_token_expiry: 168h
+storage: mysql

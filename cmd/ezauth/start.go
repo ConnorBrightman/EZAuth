@@ -52,6 +52,14 @@ func runStart() {
 		if err != nil {
 			log.Fatal(err)
 		}
+	case "mysql":
+		if cfg.DatabaseURL == "" {
+			log.Fatal("storage: mysql requires database_url to be set in .env or config.yaml")
+		}
+		repo, err = auth.NewMySQLUserRepository(cfg.DatabaseURL)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "memory":
 		repo = auth.NewMemoryUserRepository()
 	default:
