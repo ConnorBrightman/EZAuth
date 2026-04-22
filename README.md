@@ -8,7 +8,7 @@ ezauth runs as a standalone HTTP server. Your application talks to it over REST,
 
 ## Installation
 
-Download the latest binary for your platform from the [Releases page](https://github.com/ConnorBrightman/ezauth/releases):
+Download the latest binary for your platform from the [Releases page](https://github.com/ConnorBrightman/ezauth/releases) and place it in your project folder.
 
 | Platform | File |
 |----------|------|
@@ -19,7 +19,17 @@ Download the latest binary for your platform from the [Releases page](https://gi
 
 On macOS/Linux, make it executable after downloading:
 ```bash
-chmod +x ezauth-mac-arm  # or ezauth-linux
+chmod +x ezauth-mac-arm  # adjust to match the filename you downloaded
+```
+
+> **Note:** The downloaded file keeps its original name (e.g. `ezauth-mac-arm`). Commands below use `ezauth` for brevity — substitute the actual filename if you haven't renamed it or added it to your PATH. For example:
+> ```bash
+> ./ezauth-mac-arm start
+> ```
+
+**Optionally rename it** to `ezauth` (or `ezauth.exe` on Windows) so the commands below work as written:
+```bash
+mv ezauth-mac-arm ezauth   # macOS/Linux
 ```
 
 **Or build from source** (requires Go 1.21+):
@@ -30,12 +40,17 @@ cd ezauth
 go install ./cmd/ezauth
 ```
 
+---
+
 ## Quick start
+
+Place the binary in your project folder, then open a terminal there.
 
 **Zero config** — just run it:
 
 ```bash
-ezauth start
+./ezauth start          # macOS/Linux
+ezauth.exe start        # Windows
 ```
 
 The server starts on `http://127.0.0.1:8080`. Users are stored in memory and sessions are lost on restart. Good for quick testing.
@@ -43,8 +58,8 @@ The server starts on `http://127.0.0.1:8080`. Users are stored in memory and ses
 **Persistent setup** — run this once in your project directory:
 
 ```bash
-ezauth init   # generates config.yaml with a unique JWT secret and SQLite storage
-ezauth start
+./ezauth init   # generates config.yaml with a unique JWT secret and SQLite storage
+./ezauth start
 ```
 
 Users are stored in `ezauth-data/ezauth.db` and survive restarts.
