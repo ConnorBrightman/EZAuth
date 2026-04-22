@@ -22,15 +22,11 @@ On macOS/Linux, make it executable after downloading:
 chmod +x ezauth-mac-arm  # adjust to match the filename you downloaded
 ```
 
-> **Note:** The downloaded file keeps its original name (e.g. `ezauth-mac-arm`). Commands below use `ezauth` for brevity — substitute the actual filename if you haven't renamed it or added it to your PATH. For example:
-> ```bash
-> ./ezauth-mac-arm start
-> ```
-
-**Optionally rename it** to `ezauth` (or `ezauth.exe` on Windows) so the commands below work as written:
+**Optionally rename it** so the commands below work as written:
 ```bash
 mv ezauth-mac-arm ezauth   # macOS/Linux
 ```
+If you skip this step, replace `ezauth` with the actual filename in every command (e.g. `./ezauth-mac-arm start`).
 
 **Or build from source** (requires Go 1.21+):
 
@@ -44,13 +40,15 @@ go install ./cmd/ezauth
 
 ## Quick start
 
-Place the binary in your project folder, then open a terminal there.
+Place the binary in your project folder and open a terminal there.
+
+> **Note:** Commands below use `./ezauth` (macOS/Linux) or `ezauth.exe` (Windows). If you didn't rename the binary, substitute its actual name — e.g. `./ezauth-mac-arm start`. If you added the binary to your PATH, drop the `./`.
 
 **Zero config** — just run it:
 
 ```bash
-./ezauth start          # macOS/Linux
-ezauth.exe start        # Windows
+./ezauth start       # macOS/Linux
+ezauth.exe start     # Windows
 ```
 
 The server starts on `http://127.0.0.1:8080`. Users are stored in memory and sessions are lost on restart. Good for quick testing.
@@ -58,7 +56,7 @@ The server starts on `http://127.0.0.1:8080`. Users are stored in memory and ses
 **Persistent setup** — run this once in your project directory:
 
 ```bash
-./ezauth init   # generates config.yaml with a unique JWT secret and SQLite storage
+./ezauth init
 ./ezauth start
 ```
 
