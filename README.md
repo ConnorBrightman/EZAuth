@@ -62,7 +62,17 @@ The server starts on `http://127.0.0.1:8080`. Users are stored in memory and ses
 ./ezauth start
 ```
 
-Users are stored in `ezauth-data/ezauth.db` and survive restarts.
+`init` will prompt you to choose a storage backend:
+
+| Option | Backend | Best for |
+|--------|---------|----------|
+| `1` | Memory | Quick testing — data lost on restart |
+| `2` | File (JSON) | Simple persistence, human-readable |
+| `3` | SQLite | Local development with persistent storage (default) |
+| `4` | PostgreSQL | External Postgres server |
+| `5` | MySQL | External MySQL server |
+
+For Postgres and MySQL you'll be prompted for a connection string (DSN). All other backends store data locally in your project folder.
 
 ## Configuration
 
