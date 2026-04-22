@@ -100,7 +100,8 @@ func runStart() {
 
 `)
 	fmt.Printf("storage: %s   port: %s   access token expiry: %s\n\n", cfg.Storage, cfg.Port, cfg.AccessTokenExpiry)
-	fmt.Printf("API:  http://%s/auth\n", addr)
+	fmt.Printf("Health: http://%s/health\n", addr)
+	fmt.Printf("API:    http://%s/auth/{register,login,me,logout,refresh}\n", addr)
 	if _, err := os.Stat("public"); err == nil {
 		fmt.Printf("Demo: http://%s\n", addr)
 	}
