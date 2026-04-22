@@ -82,6 +82,7 @@ func runStart() {
 
 	// Mount API router
 	mainHandler.Handle("/auth/", router)
+	mainHandler.Handle("/health", router)
 
 	handler := middleware.Logging(mainHandler)
 
